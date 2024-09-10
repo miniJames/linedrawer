@@ -5,12 +5,12 @@ class lineMaker {
   float yoff = random(100);
 
   ArrayList<singleLine> DNA;
-  float strokeLength = lineLength;
   PGraphics pic;
   int health;
   color bgnd;
   color pen;
   PImage target;
+  int lineLength;
   lineMaker(PImage t, color bg, color p) {
     target=t;
     bgnd = bg;
@@ -32,87 +32,58 @@ class lineMaker {
 
     target.updatePixels();
   }
-  lineMaker(ArrayList<singleLine> dnaItems, PVector nxt, PVector pvs, PImage tgt, color bg, color p) {
+  lineMaker(ArrayList<singleLine> dnaItems, PVector nxt, PVector pvs, PImage tgt, color bg, color p, int bWidth, PGraphics cp) {
     DNA = new ArrayList<singleLine>();
     bgnd = bg;
     pen = p;
     target = tgt;
+    lineLength=bWidth;
     for (singleLine t : dnaItems) {
       singleLine n = new singleLine(t.loc.x, t.loc.y, t.col, t.linewidth);
       DNA.add(n);
     }
     next =nxt.copy();
     prev= pvs.copy();
-    pic = createGraphics(tgt.width, tgt.height );
+    pic = cp; // createGraphics(tgt.width, tgt.height );
   }
-  //void update() {
-  //  xoff+=0.01;
-  //  yoff+=0.01;
-  //  float nextx = (noise(xoff) * width/2) ;
-  //  //println(nextx);
-  //  //while (nextx< -10 || nextx > (pic.width)+10) {
-  //  //  float xrand = random(-strokeLength, strokeLength);
-
-  //  //  nextx=prev.x + xrand;
-  //  //}
-  //  float nexty = (noise(yoff) * height) ;
-  //  println(nexty);
-  //  //while (nexty< -10 || nexty > pic.height+10) {
-  //  //  float yrand = random(-strokeLength, strokeLength);
-  //  //  nexty=prev.y + yrand;
-  //  //}
-  //  next = new PVector(nextx, nexty);
-  //  //color col =color( random(255),random(255),random(255),random(255));
-  //  color col = target.pixels[floor(random(0, target.pixels.length))];
-  //  col = color(red(col), green(col), blue(col));
-  //  //float lw = map(mouseY,0,width,0,50);
-  //  singleLine n= new singleLine(nextx, nexty, col, lineWidth);
-  //  DNA.add(n);
-  //  prev = next.copy();
-  //}
-  void update2() {
 
 
-
-
-//    float nextx=-100, nexty=-100;
-//    while (nextx< -10 || nextx > (pic.width)+10) {
-//      float xrand = random(-strokeLength, strokeLength);
-
-//      nextx=prev.x + xrand;
-//    }
-
-//    while (nexty< -10 || nexty > pic.height+10) {
-//      float yrand = random(-strokeLength, strokeLength);
-//      nexty=prev.y + yrand;
-//    }
-//    next = new PVector(nextx, nexty);
-//    //color col =color( random(255),random(255),random(255),random(255));
-//    color col = 0; // target.pixels[floor(random(0, target.pixels.length))];
-//    //col = color(red(col),green(col),blue(col),random(255 ));
-//    //float lw = map(mouseY,0,width,0,50);
-//    singleLine n= new singleLine(nextx, nexty, col, lineWidth);
-//    DNA.add(n);
-//    //prev=next.copy();
-  }
-//float xoff=0.0;
 
   void update() {
 
-    //float nval = noise(xoff, yoff);
-    float angle=0;
+      float radius = lineLength;
     float nextx=-100, nexty=-100;
-    while ((nextx< -10 || nextx > (pic.width)+10) && (nexty< -10 || nexty > pic.height+10)) {
-   
-      angle = random(-PI, PI);
-      nextx =prev.x +  cos(angle) *random( strokeLength);
-      nexty = prev.y + sin(angle) * random(strokeLength);
-    }
+    float angle;
 
+    while (nextx < 0 || nextx > (pic.width) || nexty< 0 || nexty > pic.height) {
+      angle = random(0, 2*PI);
+      float xrand = radius * cos(angle);
+      nextx = prev.x + xrand;
+      float yrand = radius * sin(angle);
+      nexty=prev.y + yrand;
+    }
     next = new PVector(nextx, nexty);
-    color col = 0;
-    //color col = (target.pixels[(int)random(0, target.pixels.length)]);
-    float lw = (lineWidth);
+    color col = color(0);
+    
+    if(colMode == rgb) {
+      int r = (int)random(3);
+      if (r < 1){
+        col = color(255,0,0);
+      } else if(r<2) {
+        col = color(0,255,0);
+      } else {
+        col = color(0,0,255);
+      }
+    } else if (colMode == targetpallet) {
+      col = target.pixels[floor(random(0, target.pixels.length))];
+    } else if (colMode == randomcolour) {
+      col =color( random(255),random(255),random(255),random(255));
+    } else if (colMode == bw) {
+       col = color(0);
+    } else if (colMode == grey) {
+      col = color(random(255));
+    }
+    float lw =(int) (lineWidth);
     singleLine n= new singleLine(nextx, nexty, col, lw);
     DNA.add(n);
   }
@@ -122,12 +93,10 @@ class lineMaker {
     pic.background(255);
     prev=next.copy();
     for (int c=0; c<DNA.size(); c++) {
-      pic.strokeWeight(1);
       singleLine t = DNA.get(c);
       if (c+1<DNA.size()) {
         singleLine nxt = DNA.get(c+1);
-        //pic.stroke(0);
-        pic.stroke(t.col,255);
+        pic.stroke(t.col);
         pic.strokeWeight(nxt.linewidth);
         pic.line(t.loc.x, t.loc.y, nxt.loc.x, nxt.loc.y);
       }
@@ -139,17 +108,17 @@ class lineMaker {
   }
   int getHealth( PImage t) {
     health=0;
-    //pic.loadPixels();
-    //t.loadPixels();
+    pic.loadPixels();
+    t.loadPixels();
     for (int px=0; px<min(t.pixels.length, pic.pixels.length); px++) {
       color so, tg;
-
+   
       so = pic.pixels[px]; 
       tg = target.pixels[px];
-
-      // if(so!=0){
-      //println("Found col " + so);
-
+      
+        // if(so!=0){
+        //println("Found col " + so);
+        
       //}
       int r, g, b;
       r=abs((int)(red(so)-red(tg)));
