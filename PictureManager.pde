@@ -42,9 +42,12 @@ class PictureMaker {
   void nextGeneration() {
     lineMaker h = lines.get((int)healthiestIndex);
     lines = new ArrayList<lineMaker>();
+    int brushSize =(int)random(lineLength);
     for (int c = 0; c<generationSize; c++) {
+      PGraphics newP = createGraphics(h.pic.width, h.pic.height);
+      newP.pixels = h.pic.pixels;
 
-      lineMaker d = new lineMaker(h.DNA, h.next, h.prev, target, bgnd, pen);
+      lineMaker d = new lineMaker(h.DNA, h.next, h.prev, target, bgnd, pen,brushSize, newP);
       //d.xoff=h.xoff;
       //d.yoff=h.yoff;
       //lineMaker d = lines.get(c); //new lineMaker( h.prev, h.next, target, bgnd,pen);
